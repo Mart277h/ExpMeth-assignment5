@@ -1,0 +1,122 @@
+---
+title: "PortFolio5 - cake"
+author: "Martine Lind Jensen"
+date: "28/11/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+#Load packages 
+library(pacman)
+p_load(tidyverse, boot, lmerTest, caret, e1071, lme4, MuMIn)
+```
+
+```{r}
+#loading data 
+
+cake <- read.csv("cake.csv")
+
+cake <- cake[,-4]
+
+cake$recipe <- as.factor(cake$recipe)
+cake$temp <- as.factor(cake$temp)
+#creating a column called ID to make 18 different cakes 
+cake <- cake %>% 
+  mutate(ID = paste(recipe, temp)) 
+```
+
+```{r}
+#basline is temp 
+#best model so far, AIC going with this 
+cakemA <-  lmerTest::lmer(angle ~ temp + (1 | recipe), data = cake, REML = F)
+
+summary(cakemA)
+```
+
+
+Creating max model that predict angle by recipe and temperature, and has a random effect with recipe and ID and temp and ID 
+
+```{r}
+#Baseline is ID 
+
+#not good model, failed to converge
+cakem1 <-  lmerTest::lmer(angle ~ recipe + temp + (1 + recipe | ID) + (1 + temp | ID), data = cake, REML = F)
+
+#also failed to converge
+cakem2 <- lmerTest::lmer(angle ~ recipe + temp + (1 + recipe | ID), data = cake, REML = F)
+
+#also shit
+cakem3 <-  lmerTest::lmer(angle ~ recipe + temp + (1 + temp | ID), data = cake, REML = F)
+
+summary(cakem3)
+
+
+#It seemed like the only thing significantly is temp 
+
+cakem12 <-  lmerTest::lmer(angle ~ temp + (1 + temp | ID), data = cake, REML = F)
+
+#Baseline is recipe 
+
+cakemA <-  lmerTest::lmer(angle ~ temp + recipe + replicate + (1 | recipe), data = cake, REML = F)
+
+cakemb <-  lmerTest::lmer(angle ~ temp +  (1 + temp | recipe), data = cake, REML = F)
+
+summary(cakemb)
+anova(cakem12,cakem3, cakemA, cakemb, cakem9)
+
+MuMIn::r.squaredGLMM(cakem9)
+
+
+#basline is temp 
+#best model so far, AIC going with this 
+cakemA <-  lmerTest::lmer(angle ~ temp + (1 | recipe), data = cake, REML = F)
+
+cakem9 <-  lmerTest::lmer(angle ~ recipe + (1 | temp), data = cake, REML = F)
+
+summary(cakem9)
+
+
+MuMIn::r.squaredGLMM(cakem9)
+
+```
+
+```{r}
+#Creating max model 
+cakem1 <-  lmerTest::lmer(angle ~ recipe + temp + replicate + (1 + recipe | ID) + (1 + temp | ID) + (1 + replicate | ID), data = cake, REML = F)
+
+summary(cakem1)
+cakem2 <- lmerTest::lmer(angle ~ recipe + temp + (1 +  | ID),data = cake, REML = F)
+
+cakem3 <- lmerTest::lmer(angle ~ temp + (1 + replicate | ID), data = cake, REML = F)
+
+cakem4 <- lmerTest::lmer(angle ~ recipe + (1 + replicate | ID ), data = cake, REML = F)
+
+cakem5 <- lmerTest::lmer(angle ~ replicate, data = cake, REML = F)
+
+anova(cakem1, cakem2, cakem3, cakem4)
+
+cakem_max <- lmerTest::lmer(angle ~ replicate + (1 + replicate| temp) + (1 + replicate | recipe),data = cake, REML = F)
+
+MuMIn::r.squaredGLMM(cakem1)
+
+summary(cakem3)
+
+cake1 <- lmerTest::lmer(angle ~ temp + (1 + recipe | temp), data = cake, REML = F)
+
+cake2 <- lmerTest::lmer(angle ~ temp + (1 + temp | recipe), data = cake, REML = F)
+
+cake3 <- lmerTest::lmer(angle ~ temp + (1 | recipe), data = cake, REML = F)
+
+(1 + temp | recipe) +
+summary(cake1)
+summary(cake2)
+
+anova(cake1, cake2, cake3)
+```
+
+```{r}
+plot(cakem12)
+```
+
